@@ -61,30 +61,30 @@ def main():
     print("Loading data...")
     load_data(directory)
     print("Data loaded.")
+    while True:
+        source = person_id_for_name(input("Name: "))
+        if source is None:
+            sys.exit("Person not found.")
+        target = person_id_for_name(input("Name: "))
+        if target is None:
+            sys.exit("Person not found.")
 
-    source = person_id_for_name(input("Name: "))
-    if source is None:
-        sys.exit("Person not found.")
-    target = person_id_for_name(input("Name: "))
-    if target is None:
-        sys.exit("Person not found.")
+        #source = person_id_for_name("Kevin Bacon")
+        #target = person_id_for_name("Will Smith")
 
-    #source = person_id_for_name("Kevin Bacon")
-    #target = person_id_for_name("Will Smith")
+        path = shortest_path(source, target)
 
-    path = shortest_path(source, target)
-
-    if path is None:
-        print("Not connected.")
-    else:
-        degrees = len(path)
-        print(f"{degrees} degrees of separation.")
-        path = [(None, source)] + path
-        for i in range(degrees):
-            person1 = people[path[i][1]]["name"]
-            person2 = people[path[i + 1][1]]["name"]
-            movie = movies[path[i + 1][0]]["title"]
-            print(f"{i + 1}: {person1} and {person2} starred in {movie}")
+        if path is None:
+            print("Not connected.")
+        else:
+            degrees = len(path)
+            print(f"{degrees} degrees of separation.")
+            path = [(None, source)] + path
+            for i in range(degrees):
+                person1 = people[path[i][1]]["name"]
+                person2 = people[path[i + 1][1]]["name"]
+                movie = movies[path[i + 1][0]]["title"]
+                print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
 def shortest_path(source, target):
@@ -103,7 +103,10 @@ def shortest_path(source, target):
     frontier.add(start)
 
     explored = set()
-    num_explored = 0;
+    num_explored = 0
+    finder = False
+    if(len(neighbors_for_person(target))==0):
+        return None
     while True:
         # If nothing left in frontier, then no path
         if frontier.empty():
@@ -113,8 +116,27 @@ def shortest_path(source, target):
         node = frontier.remove()
         num_explored += 1
 
+        
+
+        # Mark node as explored
+        #explored.add(node.state)
+
+        # Add neighbors to frontier
+        if (not finder):
+            for action, state in neighbors_for_person(node.state):
+                act = movies[action]["title"]
+                #print(f"{act}")
+                if not frontier.contains_state(state) and (not (state in explored)):
+                    child = Node(state=state, parent=node, action=action)
+                    explored.add(child.state)
+                    frontier.add(child)
+                    if child.state == target:
+                        finder = True
+                        break
+
         # If node is the goal, then we have a solution
-        if node.state == target:
+        if finder:
+            node = frontier.last()
             actions = []
             cells = []
             while node.parent is not None:
@@ -129,17 +151,7 @@ def shortest_path(source, target):
                 path.append((actions[i],cells[i]))
             return path
 
-        # Mark node as explored
-        explored.add(node.state)
-
-        # Add neighbors to frontier
-        for action, state in neighbors_for_person(node.state):
-            if not frontier.contains_state(state) and state not in explored:
-                child = Node(state=state, parent=node, action=action)
-                frontier.add(child)
-                if child.state == target:
-                    break
-
+        #print(f"Explored: {num_explored}; finder?: {finder}")
     #raise NotImplementedError
 
 

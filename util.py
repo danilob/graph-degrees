@@ -36,3 +36,11 @@ class QueueFrontier(StackFrontier):
             node = self.frontier[0]
             self.frontier = self.frontier[1:]
             return node
+
+    def last(self):
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            node = self.frontier[-1]
+            self.frontier = self.frontier[:-2]
+            return node
